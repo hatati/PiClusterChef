@@ -91,3 +91,21 @@ Merge kubeconfigs:
 ```bash
 kubectl get nodes --kubeconfig k3sconfig
 ```
+
+Cert manager:
+
+kubectl create namespace cert-manager --kubeconfig k3sconfig
+
+helm upgrade --install cert-manager jetstack/cert-manager --namespace cert-manager --version v1.8.2 --set installCRDs=true --wait --kubeconfig k3sconfig
+
+
+Rancher:
+
+helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
+helm repo update
+
+kubectl create ns cattle-system --kubeconfig k3sconfig
+
+helm upgrade --install rancher rancher-latest/rancher --version 2.7.0 --namespace cattle-system --set hostname=nermin.cluster --set replicas=1 --set rancherImageTag=v2.7.2-rc5-linux-arm64 --kubeconfig k3sconfig
+
+kubectl get secret --namespace cattle-system bootstrap-secret -o go-template='{{.data.bootstrapPassword|base64decode}}{{"\n"}}' --kubeconfig k3sconfig
