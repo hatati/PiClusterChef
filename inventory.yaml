@@ -1,0 +1,21 @@
+workers:
+  hosts:
+    nerminworker1:
+      ansible_host: 192.168.0.66
+      ansible_user: nermin
+
+masters:
+  hosts:
+
+# This hostgroup is designed to only contains the initial bootstrap master node
+bootstrapMaster:
+  hosts:
+    nerminmaster:
+      ansible_host: 192.168.0.67
+      ansible_user: nermin
+
+pies:
+  children:
+    bootstrapMaster:
+    masters:
+    workers:
