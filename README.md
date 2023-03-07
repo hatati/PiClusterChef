@@ -2,7 +2,7 @@
 
 Cook up and scale a k3s kubernetes cluster on Raspberry pies with a single command.
 
-Tutorial blog post can be found [here](https://dev.to/hatati/cook-up-a-k3s-cluster-on-raspberry-pies-with-ansible-3jh3-temp-slug-6206678?preview=7f642f00b65bdc8bcbd2ebaabb9956af443245a3f8df1371e2535b4ab5b805106e1a62a219bd079114b640eaa781a63cf8b1b839a37f197876058e06).
+Tutorial blog post can be found [here](https://dev.to/hatati/cook-up-a-k3s-cluster-on-raspberry-pies-with-ansible-4bb4).
 
 ![pies](images/pies.jpg)
 
