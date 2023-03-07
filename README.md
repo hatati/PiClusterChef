@@ -1,44 +1,26 @@
 # PiClusterChef
-Cook up a k3s cluster with a single command
 
-## Prerequisites
+Cook up and scale a k3s kubernetes cluster on Raspberry pies with a single command.
 
-You need to have installed the Raspbian OS on you Raspberry Pies, connect them to your local network, give them a hostname and enable their SSH servers. There is an excellent guide by w3Schools on how to do this [here](https://www.w3schools.com/nodejs/nodejs_raspberrypi.asp).
+Tutorial blog post can be found [here](https://dev.to/hatati/cook-up-a-k3s-cluster-on-raspberry-pies-with-ansible-3jh3-temp-slug-6206678?preview=7f642f00b65bdc8bcbd2ebaabb9956af443245a3f8df1371e2535b4ab5b805106e1a62a219bd079114b640eaa781a63cf8b1b839a37f197876058e06).
 
-### Ansible
+## Inventory file
 
-```bash
-ansible-galaxy collection install community.general
-```
+Add your Raspberry pi hosts in the *inventory.yaml*.
 
-```bash
-ansible-galaxy collection install kubernetes.core
-```
+> **Note**: If you change the name of the `nerminmaster` host, remember to change `nerminmaster` in the *install-k3s-playbook.yaml* file too.
 
-## Setup
+## Create the k3s cluster
 
-Run this to copy your SSH public key to the Raspberry pies:
-
-> **Note**: Make sure you have generated an SSH key pair on your Ubuntu machine. You can check by running:
->
-> ```bash
-> ls ~/.ssh/id_*.pub
-> ```
->
-> If you don't see any files listed, you'll need to generate an SSH key pair. You can do this by running:
->
-> ```bash
-> ssh-keygen
->```
->
-> Follow the prompts to generate a new key pair. Make sure to keep your private key secure and do not share it with others.
+Create the k3s cluster by executing the install playbook:
 
 ```bash
-ssh-copy-id nermin@nerminmaster
-ssh-copy-id nermin@nerminworker1
+$ ansible-playbook -i inventory.yaml install-k3s-playbook.yaml
 ```
 
-Initial k3s kubeconfig:
+That's it!
+
+The playbook downloaded the kubeconfig file from the bootstrap master to the current directory on the local machine with the name *k3sconfig*. The file looks like this:
 
 ```yaml
 apiVersion: v1
@@ -62,50 +44,49 @@ users:
     client-key-data: ...
 ```
 
-Replaced values:
+Replace the localhost IP in the `server` value with the IP or hostname of the bootstrap master node.
 
 ```yaml
 apiVersion: v1
 clusters:
 - cluster:
     certificate-authority-data: ...
-    server: https://nerminmaster:6443
-  name: nermin-cluster
+    server: https://nerminmaster:6443  # <----- This value here.
+  name: default
 contexts:
 - context:
-    cluster: nermin-cluster
-    user: nermin-cluster-user
-  name: nermin-cluster
-current-context: nermin-cluster
+    cluster: default
+    user: default
+  name: default
+current-context: default
 kind: Config
 preferences: {}
 users:
-- name: nermin-cluster-user
+- name: default
   user:
     client-certificate-data: ...
     client-key-data: ...
 ```
 
-Merge kubeconfigs:
+Verify that the cluster is up and running:
 
 ```bash
-kubectl get nodes --kubeconfig k3sconfig
+$ kubectl get nodes --kubeconfig k3sconfig
+NAME            STATUS   ROLES                       AGE     VERSION
+nerminmaster    Ready    control-plane,etcd,master   8m42s   v1.24.10+k3s1
+nerminworker1   Ready    <none>                      8m7s    v1.24.10+k3s1
 ```
 
-Cert manager:
+Success.
 
-kubectl create namespace cert-manager --kubeconfig k3sconfig
+## Clean up
 
-helm upgrade --install cert-manager jetstack/cert-manager --namespace cert-manager --version v1.8.2 --set installCRDs=true --wait --kubeconfig k3sconfig
+Run the *uninstall-k3s-playbook* to remove k3s from all the nodes:
 
+```bash
+$ ansible-playbook -i inventory.yaml uninstall-k3s-playbook.yaml
+```
 
-Rancher:
+## Remarks
 
-helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
-helm repo update
-
-kubectl create ns cattle-system --kubeconfig k3sconfig
-
-helm upgrade --install rancher rancher-latest/rancher --version 2.7.0 --namespace cattle-system --set hostname=nermin.cluster --set replicas=1 --set rancherImageTag=v2.7.2-rc5-linux-arm64 --kubeconfig k3sconfig
-
-kubectl get secret --namespace cattle-system bootstrap-secret -o go-template='{{.data.bootstrapPassword|base64decode}}{{"\n"}}' --kubeconfig k3sconfig
+This setup allows easy scaling of the cluster up and down by only adding or removing master and worker nodes from the inventory file. However, there are some important points to be aware of:
