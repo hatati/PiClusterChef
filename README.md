@@ -4,6 +4,8 @@ Cook up and scale a k3s kubernetes cluster on Raspberry pies with a single comma
 
 Tutorial blog post can be found [here](https://dev.to/hatati/cook-up-a-k3s-cluster-on-raspberry-pies-with-ansible-4bb4).
 
+> **NOTE**: As pointed out by [@GregLebreton](https://github.com/GregLebreton) in issue https://github.com/hatati/PiClusterChef/issues/2, the `/boot/cmdline.txt` file location has changed since Debian 12 and is now ` /boot/firmware/cmdline.txt`. Keep this in mind if you encounter a file not found error.
+
 ![pies](images/pies.jpg)
 
 ## Inventory file
